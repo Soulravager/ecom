@@ -18,18 +18,21 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|max:2048'
+            'name'        => 'required|string|max:255',
+            'description' => 'required|string',
+            'price'       => 'required|numeric|min:0',            
+            'stock'       => 'required|integer|min:0',
+            'image'       => 'nullable' // can be file or URL
         ]);
 
         $productData = $request->only(['name', 'description', 'price', 'stock']);
 
-        // Handle image upload if exists
+        // Handle image upload or URL
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('products', 'public');
             $productData['image'] = $path;
+        } elseif ($request->filled('image')) {
+            $productData['image'] = $request->input('image');
         }
 
         $product = Product::create($productData);
@@ -50,18 +53,24 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
         $this->validate($request, [
-            'name' => 'sometimes|string|max:255',
-            'price' => 'sometimes|numeric|min:0',
-            'stock' => 'sometimes|integer|min:0',
-            'image' => 'nullable|image|max:2048'
+            'name'        => 'sometimes|string|max:255',
+            'description' => 'sometimes|string',
+            'price'       => 'sometimes|numeric|min:0',
+            'stock'       => 'sometimes|integer|min:0',
+            'image'       => 'nullable'
         ]);
 
-        $product->update($request->only(['name', 'description', 'price', 'stock']));
+        $updateData = $request->only(['name', 'description', 'price', 'stock']);
 
+        // Handle image upload or URL
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('products', 'public');
-            $product->update(['image' => $path]);
+            $updateData['image'] = $path;
+        } elseif ($request->filled('image')) {
+            $updateData['image'] = $request->input('image');
         }
+
+        $product->update($updateData);
 
         return response()->json($product);
     }
