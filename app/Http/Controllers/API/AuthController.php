@@ -22,6 +22,7 @@ class AuthController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'role' => 'user',
         ]);
 
         $tokenResult = $user->createToken('ecom-token');
@@ -60,4 +61,16 @@ class AuthController extends Controller
     {
         return response()->json($request->user());
     }
+
+    public function logout(Request $request)
+    {
+        
+        $request->user()->token()->revoke();
+
+        return response()->json([
+            'message' => 'logged out'
+        ]);
+    }
+
+    
 }

@@ -13,21 +13,24 @@ class ProductSeeder extends Seeder
             'name' => 'Laptop',
             'description' => '15-inch laptop with 16GB RAM',
             'price' => 85000,
-            'stock' => 10
+            'stock' => 10,
+            'image' => 'products/1.jpg'
         ]);
 
         Product::create([
             'name' => 'Smartphone',
             'description' => 'Latest 5G Android phone',
             'price' => 35000,
-            'stock' => 25
+            'stock' => 25,
+            'image' => 'products/2.jpg'
         ]);
 
         Product::create([
             'name' => 'Wireless Mouse',
             'description' => 'Bluetooth ergonomic mouse',
             'price' => 1200,
-            'stock' => 50
+            'stock' => 50,
+            'image' => 'products/3.jpg'
         ]);
     }
 }
