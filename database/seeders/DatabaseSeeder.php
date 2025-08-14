@@ -8,9 +8,7 @@ use App\Models\User;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
+
     public function run(): void
     {
         // Admin
@@ -29,7 +27,7 @@ class DatabaseSeeder extends Seeder
             'role' => 'staff'
         ]);
 
-        // Normal User
+        //  User
         User::create([
             'name' => 'Normal User',
             'email' => 'user@example.com',

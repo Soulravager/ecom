@@ -10,26 +10,26 @@ class ProductSeeder extends Seeder
     public function run(): void
     {
         Product::create([
-            'name' => 'Laptop',
-            'description' => '15-inch laptop with 16GB RAM',
-            'price' => 85000,
-            'stock' => 10,
+            'name' => ' ITEM 1',
+            'description' => 'description description description.',
+            'price' => 1999,
+            'stock' => 50,
             'image' => 'products/1.jpg'
         ]);
 
         Product::create([
-            'name' => 'Smartphone',
-            'description' => 'Latest 5G Android phone',
-            'price' => 35000,
-            'stock' => 25,
+            'name' => 'ITEM 2',
+            'description' => 'description description description.',
+            'price' => 9999,
+            'stock' => 30,
             'image' => 'products/2.jpg'
         ]);
 
         Product::create([
-            'name' => 'Wireless Mouse',
-            'description' => 'Bluetooth ergonomic mouse',
-            'price' => 1200,
-            'stock' => 50,
+            'name' => 'ITEM 3',
+            'description' => 'description description description.',
+            'price' => 777,
+            'stock' => 100,
             'image' => 'products/3.jpg'
         ]);
     }
