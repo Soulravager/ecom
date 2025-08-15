@@ -11,6 +11,7 @@ use App\Http\Controllers\API\UserManagementController;
 
 use App\Http\Controllers\API\CartController;
 
+use App\Http\Controllers\API\OrderController;
 
 Route::post('/oauth/token', [AccessTokenController::class, 'issueToken'])
     ->name('passport.token');
@@ -52,4 +53,14 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/cart', [CartController::class, 'store']);
     Route::put('/cart/{id}', [CartController::class, 'update']);
     Route::delete('/cart/{id}', [CartController::class, 'destroy']);
+});
+
+
+
+
+Route::middleware('auth:api')->group(function () {
+    Route::post('/orders', [OrderController::class,'store']);
+    Route::get('/orders', [OrderController::class,'index']);
+    Route::get('/orders/{id}', [OrderController::class,'show']);
+    Route::patch('/orders/{id}/status', [OrderController::class,'updateStatus']); // admin/staff only
 });
