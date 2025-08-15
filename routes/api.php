@@ -9,6 +9,8 @@ use App\Http\Controllers\API\ProductController;
 
 use App\Http\Controllers\API\UserManagementController;
 
+use App\Http\Controllers\API\CartController;
+
 
 Route::post('/oauth/token', [AccessTokenController::class, 'issueToken'])
     ->name('passport.token');
@@ -42,4 +44,12 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::patch('/users/{id}/assign-staff', [UserManagementController::class, 'assignStaff']);
     Route::patch('/users/{id}/assign-user', [UserManagementController::class, 'assignUser']);
 
+});
+
+
+Route::middleware('auth:api')->group(function () {
+    Route::get('/cart', [CartController::class, 'index']);
+    Route::post('/cart', [CartController::class, 'store']);
+    Route::put('/cart/{id}', [CartController::class, 'update']);
+    Route::delete('/cart/{id}', [CartController::class, 'destroy']);
 });

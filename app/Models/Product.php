@@ -29,4 +29,10 @@ class Product extends Model
                 $product->id = (string) Str::uuid();         }
      });
     }
+
+    public function cartItems()
+{
+    return $this->hasMany(CartItem::class, 'product_id', 'id');
+}
+
 }

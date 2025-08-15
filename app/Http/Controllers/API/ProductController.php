@@ -21,19 +21,12 @@ class ProductController extends Controller
             'name'        => 'required|string|max:255',
             'description' => 'required|string',
             'price'       => 'required|numeric|min:100',            
-            'stock'       => 'required|integer|min:0',
-            'image'       => 'nullable|image' 
+            'stock'       => 'required|integer|min:1',
+            'image'       => 'nullable' 
         ]);
 
-        $productData = $request->only(['name', 'description', 'price', 'stock']);
-
+        $productData = $request->only(['name', 'description', 'price', 'stock']);      
         
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $productData['image'] = $path;
-        } elseif ($request->filled('image')) {
-            $productData['image'] = $request->input('image');
-        }
 
         $product = Product::create($productData);
 
@@ -56,19 +49,12 @@ class ProductController extends Controller
             'name'        => 'sometimes|string|max:255',
             'description' => 'sometimes|string',
             'price'       => 'sometimes|numeric|min:100',
-            'stock'       => 'sometimes|integer|min:0',
-            'image'       => 'nullable|image'
+            'stock'       => 'sometimes|integer|min:1',
+            'image'       => 'nullable'
         ]);
 
-        $updateData = $request->only(['name', 'description', 'price', 'stock']);
-
+        $updateData = $request->only(['name', 'description', 'price', 'stock']);        
         
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $updateData['image'] = $path;
-        } elseif ($request->filled('image')) {
-            $updateData['image'] = $request->input('image');
-        }
 
         $product->update($updateData);
 
