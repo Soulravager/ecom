@@ -13,7 +13,7 @@ return new class extends Migration
             $table->uuid('order_id');
             $table->uuid('product_id');
             $table->integer('quantity');
-            $table->decimal('price', 10, 2); // price at the time of order
+            $table->decimal('price', 10, 2); 
             $table->timestamps();
 
             $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');

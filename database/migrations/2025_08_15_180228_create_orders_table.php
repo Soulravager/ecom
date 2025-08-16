@@ -12,9 +12,9 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->bigInteger('user_id')->unsigned();
             $table->decimal('total_amount', 10, 2);
-            $table->string('status')->default('pending'); // pending/completed/cancelled
+            $table->string('status')->default('pending'); 
             $table->string('payment_type')->nullable();
-            $table->string('payment_id', 20)->nullable(); // random transaction id
+            $table->string('payment_id', 20)->nullable(); 
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

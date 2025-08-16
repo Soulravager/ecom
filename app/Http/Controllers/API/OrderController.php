@@ -12,8 +12,7 @@ use App\Models\Product;
 
 class OrderController extends Controller
 {
-    // Place order
-    public function store(Request $request)
+        public function store(Request $request)
     {
         $request->validate([
             'payment_type' => 'required|string',
@@ -31,8 +30,6 @@ class OrderController extends Controller
         foreach($cartItems as $item){
             $totalAmount += $item->product->price * $item->quantity;
         }
-
-        // Create order
         $order = Order::create([
             'user_id' => $user->id,
             'total_amount' => $totalAmount,
@@ -41,7 +38,6 @@ class OrderController extends Controller
             'payment_id' => Str::upper(Str::random(6))
         ]);
 
-        // Create order items & reduce stock
         foreach($cartItems as $item){
             OrderItem::create([
                 'order_id' => $order->id,
@@ -49,31 +45,26 @@ class OrderController extends Controller
                 'quantity' => $item->quantity,
                 'price' => $item->product->price
             ]);
-
-            // Update stock
+           
             $product = $item->product;
             $product->stock -= $item->quantity;
             $product->save();
         }
 
-        // Clear cart
+       
         CartItem::where('user_id', $user->id)->delete();
 
         return response()->json([
             'message'=>'Order placed successfully',
             'order' => $order->load('items.product')
         ], 201);
-    }
-
-    // Get all orders of user
+    }  
     public function index(Request $request)
-    {
-        $user = $request->user();
+    {   $user = $request->user();
         $orders = Order::with('items.product')->where('user_id', $user->id)->get();
         return response()->json($orders);
     }
 
-    // Get single order
     public function show($id, Request $request)
     {
         $user = $request->user();
@@ -81,7 +72,6 @@ class OrderController extends Controller
         return response()->json($order);
     }
 
-    // Update order status (admin/staff only)
     public function updateStatus(Request $request, $id)
     {
         $user = $request->user();
