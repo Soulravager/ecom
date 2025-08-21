@@ -10,14 +10,19 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->bigInteger('user_id')->unsigned();
+
+            
+            $table->uuid('user_id');
+            $table->foreign('user_id')
+                  ->references('id')
+                  ->on('users')
+                  ->onDelete('cascade');
+
             $table->decimal('total_amount', 10, 2);
             $table->string('status')->default('pending'); 
             $table->string('payment_type')->nullable();
             $table->string('payment_id', 20)->nullable(); 
             $table->timestamps();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
