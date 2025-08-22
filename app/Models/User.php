@@ -18,7 +18,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
-        'password',
+         'password',
+         'role_id',
     ];
 
     protected $hidden = [
@@ -34,4 +35,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(CartItem::class);
     }
+    
+    public function role()
+{
+    return $this->belongsTo(Role::class);
+}
+
 }

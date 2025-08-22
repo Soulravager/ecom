@@ -10,7 +10,9 @@ class AdminOrStaff
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->user()->role === 'admin' || auth()->user()->role === 'staff') {
+        $user = $request->user();
+
+        if ($user && in_array($user->role->slug, ['admin', 'staff'])) {
             return $next($request);
         }
 

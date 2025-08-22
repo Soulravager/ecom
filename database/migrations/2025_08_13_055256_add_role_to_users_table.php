@@ -8,15 +8,31 @@ return new class extends Migration
 {
     public function up(): void
     {
+        
+        Schema::create('roles', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('name')->unique(); 
+            $table->string('slug')->unique(); 
+            $table->timestamps();
+        });
+
+       
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role')->default('user'); 
+            $table->uuid('role_id')->nullable()->after('id');
+
+            $table->foreign('role_id')
+                  ->references('id')->on('roles')
+                  ->onDelete('restrict');
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('role'); 
+            $table->dropForeign(['role_id']);
+            $table->dropColumn('role_id');
         });
+
+        Schema::dropIfExists('roles');
     }
 };

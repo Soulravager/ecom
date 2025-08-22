@@ -63,6 +63,6 @@ class CartController extends Controller
         $cartItem = CartItem::where('user_id', Auth::id())->findOrFail($id);
         $cartItem->delete();
 
-        return response()->json(['message' => 'Item removed']);
+        return response()->json(['message' => 'Item removed from cart']);
     }
 }
