@@ -13,6 +13,8 @@ use App\Http\Controllers\API\CartController;
 
 use App\Http\Controllers\API\OrderController;
 
+use App\Http\Controllers\API\DashboardController;
+
 Route::post('/oauth/token', [AccessTokenController::class, 'issueToken'])
     ->name('passport.token');
 
@@ -47,7 +49,7 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
 
 });
 
-
+//carts
 Route::middleware('auth:api')->group(function () {
     Route::get('/cart', [CartController::class, 'index']);
     Route::post('/cart', [CartController::class, 'store']);
@@ -57,10 +59,13 @@ Route::middleware('auth:api')->group(function () {
 
 
 
-
+//Orders
 Route::middleware('auth:api')->group(function () {
     Route::post('/orders', [OrderController::class,'store']);
     Route::get('/orders', [OrderController::class,'index']);
     Route::get('/orders/{id}', [OrderController::class,'show']);
     Route::patch('/orders/{id}/status', [OrderController::class,'updateStatus']); // admin/staff only
 });
+
+//basic-dashboard 
+Route::middleware(['auth:api', 'admin.staff'])->get('/dashboard/stats', [DashboardController::class, 'stats']);
