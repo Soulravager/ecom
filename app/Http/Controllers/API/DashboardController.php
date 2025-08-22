@@ -36,7 +36,7 @@ public function salesStats(Request $request)
     $request->validate([
         'from_date'   => 'required|date',
         'to_date'     => 'required|date',
-        'product_id'  => 'nullable|exists:products,id',
+        //'product_id'  => 'nullable|exists:products,id',
     ]);
 
     $query = DB::table('order_items')
@@ -56,7 +56,7 @@ public function salesStats(Request $request)
         $query->where('order_items.product_id', $request->product_id);
     }
 
-    $results = $query->get();
+    $results = $query->first();
 
     return response()->json([
         'sales_stats' => $results
