@@ -3,24 +3,21 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
+use App\Http\Requests\RegisterUserRequest;
+
+
+use App\Http\Requests\LoginUserRequest;
 class AuthController extends Controller
 {
-    
-    public function register(Request $request)
+    public function register(RegisterUserRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|confirmed|min:6',
-        ]);
+        $validated = $request->validated();
 
-        
         $customerRole = Role::where('slug', 'customer')->first();
 
         $user = User::create([
@@ -40,17 +37,13 @@ class AuthController extends Controller
         ], 201);
     }
 
-    
-    public function login(Request $request)
+    public function login(LoginUserRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+        $validated = $request->validated();
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $validated['email'])->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($validated['password'], $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
@@ -63,14 +56,12 @@ class AuthController extends Controller
         ]);
     }
 
-    
-    public function user(Request $request)
+    public function user(\Illuminate\Http\Request $request)
     {
         return response()->json($request->user()->load('role'));
     }
 
-    
-    public function logout(Request $request)
+    public function logout(\Illuminate\Http\Request $request)
     {
         $request->user()->token()->revoke();
 
