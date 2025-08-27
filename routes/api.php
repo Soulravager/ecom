@@ -68,7 +68,7 @@ Route::middleware('auth:api')->group(function () {
 });
 
 //dashboard 
-Route::middleware(['auth:api', 'admin.staff'])->group(function () {
+Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);       
     Route::get('/dashboard/stockstat', [DashboardController::class, 'lowStock']); 
     Route::post('/dashboard/salestat', [DashboardController::class, 'salesStats']); 
