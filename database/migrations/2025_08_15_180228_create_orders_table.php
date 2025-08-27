@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('payment_type')->nullable();
             $table->string('payment_id', 20)->nullable(); 
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

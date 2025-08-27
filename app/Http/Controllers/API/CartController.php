@@ -5,54 +5,48 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\CartItem;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
+use App\Http\Requests\CartItemRequest;
+use App\Http\Requests\UpdateCartItemRequest;
 
 class CartController extends Controller
 {
-   public function index()
-{
-    $cartItems = CartItem::with('product')
-        ->where('user_id', Auth::id())
-        ->get();
-
-    $totalAmount = $cartItems->sum(function ($item) {
-        return $item->product->price * $item->quantity;
-    });
-
-    return response()->json([
-        'items' => $cartItems,
-        'total_amount' => $totalAmount
-    ]);
-}
-
-
-
-    public function store(Request $request)
+    public function index()
     {
-        $request->validate([
-            'product_id' => 'required|uuid|exists:products,id',
-            'quantity'   => 'required|integer|min:1',
+        $cartItems = CartItem::with('product')
+            ->where('user_id', Auth::id())
+            ->get();
+
+        $totalAmount = $cartItems->sum(function ($item) {
+            return $item->product->price * $item->quantity;
+        });
+
+        return response()->json([
+            'items' => $cartItems,
+            'total_amount' => $totalAmount
         ]);
+    }
+
+    public function store(CartItemRequest $request)
+    {
+        $validated = $request->validated();
 
         $cartItem = CartItem::create([
             'user_id'    => Auth::id(),
-            'product_id' => $request->product_id,
-            'quantity'   => $request->quantity,
+            'product_id' => $validated['product_id'],
+            'quantity'   => $validated['quantity'],
         ]);
 
         return response()->json($cartItem, 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateCartItemRequest $request, $id)
     {
         $cartItem = CartItem::where('user_id', Auth::id())->findOrFail($id);
 
-        $request->validate([
-            'quantity' => 'required|integer|min:1',
-        ]);
+        $validated = $request->validated();
 
         $cartItem->update([
-            'quantity' => $request->quantity,
+            'quantity' => $validated['quantity'],
         ]);
 
         return response()->json($cartItem);

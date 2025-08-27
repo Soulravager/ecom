@@ -8,7 +8,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('cart_items', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             
             
             $table->uuid('user_id');
@@ -21,11 +21,14 @@ return new class extends Migration {
             $table->uuid('product_id');
             $table->foreign('product_id')
                   ->references('id')
-                  ->on('products')
+                  ->on('products')  
                   ->onDelete('cascade');
 
             $table->integer('quantity')->default(1);
             $table->timestamps();
+
+            $table->softDeletes();
+
         });
     }
 

@@ -52,9 +52,9 @@ public function salesStats(Request $request)
         ->groupBy('order_items.product_id', 'products.name')
         ->orderByDesc('total_quantity');
 
-    if ($request->product_id) {
-        $query->where('order_items.product_id', $request->product_id);
-    }
+    // if ($request->product_id) {
+    //     $query->where('order_items.product_id', $request->product_id);
+    // }
 
     $results = $query->first();
 

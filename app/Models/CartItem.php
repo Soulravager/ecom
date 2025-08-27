@@ -5,11 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 class CartItem extends Model
 {
-    use HasFactory;
+    use HasFactory,SoftDeletes;
 
-    protected $fillable = ['user_id', 'product_id', 'quantity'];
+    protected $fillable = ['`id`','user_id', 'product_id', 'quantity'];
+
+    public $incrementing = false;   
+    protected $keyType = 'string';
+
+    protected static function boot()    
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (!$model->getKey()) {
+                $model->{$model->getKeyName()} = (string) \Illuminate\Support\Str::uuid();
+            }
+        });
+    }
 
     public function product()
     {

@@ -8,95 +8,68 @@ use Illuminate\Support\Str;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\CartItem;
-use App\Models\Product;
+use App\Http\Requests\OrderRequest;
 
 class OrderController extends Controller
 {
-    
-    public function store(Request $request)
+    public function store(OrderRequest $request)
     {
-        $request->validate([
-            'payment_type' => 'required|string',
-        ]);
-
         $user = $request->user();
         $cartItems = CartItem::with('product')->where('user_id', $user->id)->get();
 
-        if($cartItems->isEmpty()){
-            return response()->json(['message'=>'Cart is empty'], 400);
-        }
+        if ($cartItems->isEmpty()) return response()->json(['message'=>'Cart is empty'],400);
 
-        $totalAmount = 0;
-        foreach($cartItems as $item){
-            $totalAmount += $item->product->price * $item->quantity;
-        }
+        $total = $cartItems->sum(fn($item)=> $item->product->price * $item->quantity);
 
         $order = Order::create([
-            'user_id' => $user->id,
-            'total_amount' => $totalAmount,
-            'status' => 'pending',
-            'payment_type' => $request->payment_type,
-            'payment_id' => Str::upper(Str::random(6)),
+            'user_id'=>$user->id,
+            'total_amount'=>$total,
+            'status'=>'pending',
+            'payment_type'=>$request->payment_type,
+            'payment_id'=>Str::upper(Str::random(6))
         ]);
 
-        foreach($cartItems as $item){
+        $cartItems->each(function($item) use ($order){
             OrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $item->product_id,
-                'quantity' => $item->quantity,
-                'price' => $item->product->price,
+                'order_id'=>$order->id,
+                'product_id'=>$item->product_id,
+                'quantity'=>$item->quantity,
+                'price'=>$item->product->price
             ]);
+            $item->product->decrement('stock', $item->quantity);
+        });
 
-            $product = $item->product;
-            $product->stock -= $item->quantity;
-            $product->save();
-        }
+        CartItem::where('user_id',$user->id)->delete();
 
-        CartItem::where('user_id', $user->id)->delete();
-
-        return response()->json([
-            'message'=>'Order placed successfully',
-            'order' => $order->load('items.product')
-        ], 201);
+        return response()->json(['message'=>'Order placed successfully','order'=>$order->load('items.product')],201);
     }
 
-    
     public function index(Request $request)
     {
         $user = $request->user();
-        $orders = Order::with('items.product')->where('user_id', $user->id)->get();
-        return response()->json($orders);
+        if(!$user) return response()->json(['message'=>'Unauthenticated'],401);
+        return response()->json(Order::with('items.product')->where('user_id',$user->id)->get());
     }
 
-    
-    public function show($id, Request $request)
+    public function show(Request $request,$id)
     {
         $user = $request->user();
-        $order = Order::with('items.product')->where('user_id', $user->id)->findOrFail($id);
-        return response()->json($order);
+        if(!$user) return response()->json(['message'=>'Unauthenticated'],401);
+        $order = Order::with('items.product')->where('user_id',$user->id)->find($id);
+        return $order ? response()->json($order) : response()->json(['message'=>'Order not found'],404);
     }
 
-    
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request,$id)
     {
         $user = $request->user();
+        if(!in_array($user->role->slug,['admin','staff'])) return response()->json(['message'=>'Unauthorized'],403);
 
-        
-        if (!in_array($user->role->slug, ['admin','staff'])) {
-            return response()->json(['message'=>'Unauthorized'], 403);
-        }
+        $request->validate(['status'=>'required|string|in:pending,completed,cancelled']);
 
-        $request->validate([
-            'status' => 'required|string|in:pending,completed,cancelled'
-        ]);
+        $order = Order::find($id);
+        if(!$order) return response()->json(['message'=>'Order not found'],404);
 
-        $order = Order::findOrFail($id);
-        $order->status = $request->status;
-        $order->save();
-
-        return response()->json([
-            'message'=>'Order status updated',
-            'order'=>$order
-        ]);
+        $order->update(['status'=>$request->status]);
+        return response()->json(['message'=>'Order status updated','order'=>$order]);
     }
 }
