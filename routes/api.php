@@ -15,6 +15,11 @@ use App\Http\Controllers\API\OrderController;
 
 use App\Http\Controllers\API\DashboardController;
 
+
+use App\Http\Controllers\API\GeminiController;
+
+
+
 Route::post('/oauth/token', [AccessTokenController::class, 'issueToken'])
     ->name('passport.token');
 
@@ -73,3 +78,6 @@ Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
     Route::get('/dashboard/stockstat', [DashboardController::class, 'lowStock']); 
     Route::post('/dashboard/salestat', [DashboardController::class, 'salesStats']); 
 });
+
+//gemini 
+Route::post('/gemini', [GeminiController::class, 'generate']);
