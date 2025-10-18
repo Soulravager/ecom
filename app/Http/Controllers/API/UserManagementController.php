@@ -60,4 +60,33 @@ class UserManagementController extends Controller
             'user' => $user->load('role')
         ]);
     }
+
+
+    public function getAllAccounts()
+{
+    
+    $users = User::with('role')
+        ->whereHas('role', function ($query) {
+            $query->where('slug', '!=', 'admin');
+        })
+        ->select('id', 'name', 'email', 'role_id', 'created_at', 'updated_at')
+        ->get();
+
+    
+    $formattedUsers = $users->map(function ($user) {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role_name' => $user->role ? $user->role->name : null,
+            'role_slug' => $user->role ? $user->role->slug : null,
+        ];
+    });
+
+    return response()->json([
+        'message' => 'User and staff accounts retrieved successfully',
+        'accounts' => $formattedUsers
+    ]);
+}
+
 }

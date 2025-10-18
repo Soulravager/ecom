@@ -48,6 +48,7 @@ Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
 
 //for admin 
 Route::middleware(['auth:api', 'role:admin'])->group(function () {
+    Route::get('/accounts', [UserManagementController::class, 'getAllAccounts']); 
     Route::delete('/users/{id}', [UserManagementController::class, 'destroy']);
     Route::patch('/users/{id}/assign-staff', [UserManagementController::class, 'assignStaff']);
     Route::patch('/users/{id}/assign-user', [UserManagementController::class, 'assignUser']);
