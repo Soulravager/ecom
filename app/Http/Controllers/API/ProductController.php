@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Http\Requests\ProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -21,7 +22,7 @@ class ProductController extends Controller
 
         return response()->json($products);
     }
-
+ 
     public function store(ProductRequest $request)
     {
         $productData = $request->validated();
@@ -79,4 +80,34 @@ class ProductController extends Controller
 
         return response()->json(['message' => 'Product deleted successfully']);
     }
+
+
+public function hotProduct()
+{
+    $hotProducts = DB::table('order_items')
+        ->join('products', 'order_items.product_id', '=', 'products.id')
+        ->select(
+            'order_items.product_id',
+            'products.name as product_name',
+            'products.image',
+            'products.price',
+            DB::raw('SUM(order_items.quantity) as total_quantity_sold'),
+            DB::raw('COUNT(order_items.id) as total_orders')
+        )
+        ->groupBy('order_items.product_id', 'products.name', 'products.image', 'products.price')
+        ->orderByDesc('total_quantity_sold')
+        ->limit(10)
+        ->get()
+        ->map(function ($product) {
+            $product->image = $product->image
+                ? url('storage/' . $product->image)
+                : null;
+            return $product;
+        });
+
+    return response()->json([
+        'hot_products' => $hotProducts
+    ]);
+}
+
 }

@@ -37,6 +37,7 @@ Route::middleware('auth:api')->get('/user', [AuthController::class, 'user']);
 //public,show products
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
+Route::get('/new', [ProductController::class, 'hotProduct']); 
 
 //for admin/staff to control products 
 Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
@@ -70,9 +71,11 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/orders', [OrderController::class,'store']);
     Route::get('/orders', [OrderController::class,'index']);
     Route::get('/orders/{id}', [OrderController::class,'show']);
+});
+//admin/staff order conformation
+Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
     Route::patch('/orders/{id}/status', [OrderController::class,'updateStatus']); // admin/staff only
 });
-
 //dashboard 
 Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);       

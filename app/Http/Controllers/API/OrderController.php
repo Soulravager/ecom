@@ -9,7 +9,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\CartItem;
 use App\Http\Requests\OrderRequest;
-
+use Razorpay\Api\Api;
 class OrderController extends Controller
 {
     public function store(OrderRequest $request)
@@ -44,12 +44,30 @@ class OrderController extends Controller
         return response()->json(['message'=>'Order placed successfully','order'=>$order->load('items.product')],201);
     }
 
-    public function index(Request $request)
-    {
-        $user = $request->user();
-        if(!$user) return response()->json(['message'=>'Unauthenticated'],401);
-        return response()->json(Order::with('items.product')->where('user_id',$user->id)->get());
+public function index(Request $request)
+{
+    $user = $request->user();
+    if (!$user) {
+        return response()->json(['message' => 'Unauthenticated'], 401);
     }
+
+    
+    $orders = Order::with('items.product')->where('user_id', $user->id)->get();
+
+    
+    $orders->each(function ($order) {
+        $order->items->each(function ($item) {
+            if ($item->product) {
+                $item->product->image = $item->product->image
+                    ? url('storage/' . $item->product->image)
+                    : null;
+            }
+        });
+    });
+
+    return response()->json($orders);
+}
+
 
     public function show(Request $request,$id)
     {

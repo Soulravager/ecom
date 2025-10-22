@@ -16,13 +16,21 @@ class CartController extends Controller
             ->where('user_id', Auth::id())
             ->get();
 
+        $cartItems->each(function ($item) {
+            if ($item->product && $item->product->image) {
+                $item->product->image = url('storage/' . $item->product->image);
+            } else {
+                $item->product->image = null;
+            }
+        });
+
         $totalAmount = $cartItems->sum(function ($item) {
             return $item->product->price * $item->quantity;
         });
 
         return response()->json([
             'items' => $cartItems,
-            'total_amount' => $totalAmount
+            'total_amount' => $totalAmount,
         ]);
     }
 
@@ -30,19 +38,38 @@ class CartController extends Controller
     {
         $validated = $request->validated();
 
+        
+        $existingItem = CartItem::where('user_id', Auth::id())
+            ->where('product_id', $validated['product_id'])
+            ->first();
+
+        if ($existingItem) {
+            
+            $existingItem->quantity += $validated['quantity'];
+            $existingItem->save();
+
+            return response()->json([
+                'message' => 'Product quantity updated in cart',
+                'item' => $existingItem
+            ]);
+        }
+
+        
         $cartItem = CartItem::create([
             'user_id'    => Auth::id(),
             'product_id' => $validated['product_id'],
             'quantity'   => $validated['quantity'],
         ]);
 
-        return response()->json($cartItem, 201);
+        return response()->json([
+            'message' => 'Product added to cart',
+            'item' => $cartItem
+        ], 201);
     }
 
     public function update(UpdateCartItemRequest $request, $id)
     {
         $cartItem = CartItem::where('user_id', Auth::id())->findOrFail($id);
-
         $validated = $request->validated();
 
         $cartItem->update([
