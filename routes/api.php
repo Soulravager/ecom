@@ -4,21 +4,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Laravel\Passport\Http\Controllers\AccessTokenController;
 use App\Http\Controllers\API\AuthController;
-
 use App\Http\Controllers\API\ProductController;
-
 use App\Http\Controllers\API\UserManagementController;
-
 use App\Http\Controllers\API\CartController;
-
 use App\Http\Controllers\API\OrderController;
-
 use App\Http\Controllers\API\DashboardController;
-
-
 use App\Http\Controllers\API\GeminiController;
-
-
 
 Route::post('/oauth/token', [AccessTokenController::class, 'issueToken'])
     ->name('passport.token');
@@ -26,13 +17,9 @@ Route::post('/oauth/token', [AccessTokenController::class, 'issueToken'])
 
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
+
 Route::middleware('auth:api')->post('logout', [AuthController::class, 'logout']);
-
-
-
 Route::middleware('auth:api')->get('/user', [AuthController::class, 'user']);
-
-
 
 //public,show products
 Route::get('/products', [ProductController::class, 'index']);
@@ -64,8 +51,6 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/cart/{id}', [CartController::class, 'destroy']);
 });
 
-
-
 //Orders
 Route::middleware('auth:api')->group(function () {
     Route::post('/orders', [OrderController::class, 'store']);
@@ -76,9 +61,8 @@ Route::middleware('auth:api')->group(function () {
 
 //admin/staff order conformation
 Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
-    Route::patch('/orders/{id}/status', [OrderController::class,'updateStatus']); // admin/staff only
+    Route::patch('/orders/{id}/status', [OrderController::class,'updateStatus']);
 });
-
 
 //dashboard 
 Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {

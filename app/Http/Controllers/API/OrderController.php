@@ -136,8 +136,7 @@ public function index(Request $request)
             CartItem::where('user_id', $order->user_id)->delete();
 
             return response()->json(['message' => 'Payment verified successfully', 'order' => $order]);
-        } catch (\Exception $e) {
-            Log::error('Payment verification failed: ' . $e->getMessage());
+        } catch (\Exception $e) {            
 
             if ($request->razorpay_order_id) {
                 Order::where('payment_id', $request->razorpay_order_id)->update(['status' => 'failed']);
