@@ -12,58 +12,74 @@ use App\Http\Requests\OrderRequest;
 use Razorpay\Api\Api;
 class OrderController extends Controller
 {
-    public function store(OrderRequest $request)
-    {
+public function store(Request $request)
+{
+    try {
         $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
         $cartItems = CartItem::with('product')->where('user_id', $user->id)->get();
+        if ($cartItems->isEmpty()) {
+            return response()->json(['message' => 'Cart is empty'], 400);
+        }
 
-        if ($cartItems->isEmpty()) return response()->json(['message'=>'Cart is empty'],400);
-
-        $total = $cartItems->sum(fn($item)=> $item->product->price * $item->quantity);
+        $total = $cartItems->sum(fn($item) => $item->product->price * $item->quantity);
 
         $order = Order::create([
-            'user_id'=>$user->id,
-            'total_amount'=>$total,
-            'status'=>'pending',
-            'payment_type'=>$request->payment_type,
-            'payment_id'=>Str::upper(Str::random(6))
+            'user_id' => $user->id,
+            'total_amount' => $total,
+            'status' => 'pending',
+            'payment_type' => $request->payment_type,
         ]);
 
-        $cartItems->each(function($item) use ($order){
+        foreach ($cartItems as $item) {
             OrderItem::create([
-                'order_id'=>$order->id,
-                'product_id'=>$item->product_id,
-                'quantity'=>$item->quantity,
-                'price'=>$item->product->price
+                'order_id' => $order->id,
+                'product_id' => $item->product_id,
+                'quantity' => $item->quantity,
+                'price' => $item->product->price,
             ]);
-            $item->product->decrement('stock', $item->quantity);
-        });
+        }
 
-        CartItem::where('user_id',$user->id)->delete();
+        if ($request->payment_type === 'razorpay') {
+            $api = new \Razorpay\Api\Api(
+                env('RAZORPAY_KEY_ID'),
+                env('RAZORPAY_KEY_SECRET')
+            );
 
-        return response()->json(['message'=>'Order placed successfully','order'=>$order->load('items.product')],201);
+            $razorpayOrder = $api->order->create([
+                'receipt' => 'ORD-' . $order->id,
+                'amount' => $total * 100,
+                'currency' => 'INR',
+            ]);
+
+            $order->update(['payment_id' => $razorpayOrder['id']]);
+        }
+
+        return response()->json(['message' => 'Order created', 'order' => $order]);
+    } catch (\Exception $e) {
+        \Log::error('Order create failed: ' . $e->getMessage());
+        \Log::info('RAZORPAY_KEY_ID: ' . env('RAZORPAY_KEY_ID'));
+\Log::info('RAZORPAY_KEY_SECRET: ' . env('RAZORPAY_KEY_SECRET'));
+
+        return response()->json(['message' => 'Order creation failed', 'error' => $e->getMessage()], 500);
     }
+}
+
 
 public function index(Request $request)
 {
     $user = $request->user();
+
     if (!$user) {
         return response()->json(['message' => 'Unauthenticated'], 401);
     }
 
-    
-    $orders = Order::with('items.product')->where('user_id', $user->id)->get();
-
-    
-    $orders->each(function ($order) {
-        $order->items->each(function ($item) {
-            if ($item->product) {
-                $item->product->image = $item->product->image
-                    ? url('storage/' . $item->product->image)
-                    : null;
-            }
-        });
-    });
+    $orders = Order::with('items.product')
+        ->where('user_id', $user->id)
+        ->get();
 
     return response()->json($orders);
 }
@@ -90,4 +106,45 @@ public function index(Request $request)
         $order->update(['status'=>$request->status]);
         return response()->json(['message'=>'Order status updated','order'=>$order]);
     }
+
+    public function markPaid(Request $request, $id)
+{
+    $user = $request->user();
+    $order = Order::where('user_id', $user->id)->findOrFail($id);
+
+    $order->update(['status' => 'completed']);
+
+    return response()->json(['message' => 'Payment confirmed', 'order' => $order]);
+}
+ public function verifyPayment(Request $request)
+    {
+        $api = new Api(env('RAZORPAY_KEY_ID'), env('RAZORPAY_KEY_SECRET'));
+
+        try {
+            $attributes = [
+                'razorpay_order_id' => $request->razorpay_order_id,
+                'razorpay_payment_id' => $request->razorpay_payment_id,
+                'razorpay_signature' => $request->razorpay_signature
+            ];
+
+            $api->utility->verifyPaymentSignature($attributes);
+
+            $order = Order::where('payment_id', $request->razorpay_order_id)->firstOrFail();
+
+            $order->update(['status' => 'completed']);
+
+            CartItem::where('user_id', $order->user_id)->delete();
+
+            return response()->json(['message' => 'Payment verified successfully', 'order' => $order]);
+        } catch (\Exception $e) {
+            Log::error('Payment verification failed: ' . $e->getMessage());
+
+            if ($request->razorpay_order_id) {
+                Order::where('payment_id', $request->razorpay_order_id)->update(['status' => 'failed']);
+            }
+
+            return response()->json(['message' => 'Payment verification failed', 'error' => $e->getMessage()], 400);
+        }
+    }
+
 }

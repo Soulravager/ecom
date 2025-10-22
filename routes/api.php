@@ -68,14 +68,18 @@ Route::middleware('auth:api')->group(function () {
 
 //Orders
 Route::middleware('auth:api')->group(function () {
-    Route::post('/orders', [OrderController::class,'store']);
-    Route::get('/orders', [OrderController::class,'index']);
-    Route::get('/orders/{id}', [OrderController::class,'show']);
+    Route::post('/orders', [OrderController::class, 'store']);
+    Route::post('/orders/verify', [OrderController::class, 'verifyPayment']);
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/{id}', [OrderController::class, 'show']);
 });
+
 //admin/staff order conformation
 Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
     Route::patch('/orders/{id}/status', [OrderController::class,'updateStatus']); // admin/staff only
 });
+
+
 //dashboard 
 Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);       

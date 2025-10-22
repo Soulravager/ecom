@@ -14,18 +14,10 @@ class CartController extends Controller
     {
         $cartItems = CartItem::with('product')
             ->where('user_id', Auth::id())
-            ->get();
-
-        $cartItems->each(function ($item) {
-            if ($item->product && $item->product->image) {
-                $item->product->image = url('storage/' . $item->product->image);
-            } else {
-                $item->product->image = null;
-            }
-        });
+            ->get();      
 
         $totalAmount = $cartItems->sum(function ($item) {
-            return $item->product->price * $item->quantity;
+            return ($item->product ? $item->product->price : 0) * $item->quantity;
         });
 
         return response()->json([

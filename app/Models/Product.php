@@ -9,31 +9,44 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory, SoftDeletes;
 
-    
     protected $fillable = [
         'name',
         'description',
         'price',
         'stock',
-        'image'
+        'image',
     ];
 
-    
-    protected $keyType = 'string';  
-    public $incrementing = false;       
+    protected $keyType = 'string';
+    public $incrementing = false;
+
     protected static function booted()
     {
         static::creating(function ($product) {
-            if (empty($product->id)) {                
-                $product->id = (string) Str::uuid();         }
-     });
+            if (empty($product->id)) {
+                $product->id = (string) Str::uuid();
+            }
+        });
     }
 
     public function cartItems()
-{
-    return $this->hasMany(CartItem::class, 'product_id', 'id');
-}
+    {
+        return $this->hasMany(CartItem::class, 'product_id', 'id');
+    }
 
+ 
+    public function getImageAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+
+        if (Str::startsWith($value, ['http://', 'https://'])) {
+            return $value;
+        }
+
+        return url('storage/' . ltrim($value, '/'));
+    }
 }
