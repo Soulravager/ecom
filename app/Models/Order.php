@@ -13,7 +13,7 @@ class Order extends Model
 
     protected $keyType = 'string';
     public $incrementing = false;
-    protected $fillable = ['user_id','total_amount','status','payment_type','payment_id'];
+    protected $fillable = ['user_id','total_amount','status','payment_type','payment_id', 'delivery_status',];
 
     protected static function booted()
     {

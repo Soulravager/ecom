@@ -57,13 +57,17 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/orders/verify', [OrderController::class, 'verifyPayment']);
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::patch('/orders/{id}/cancel', [OrderController::class, 'cancelOrder']);
 });
 
-//admin/staff order conformation
+//admin/staff order conformation(payment conf) and  Update delivery status
 Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
+    Route::get('/admin/orders', [OrderController::class, 'GetAllOrders']);
     Route::patch('/orders/{id}/status', [OrderController::class,'updateStatus']);
+    Route::patch('/orders/{id}/delivery-status', [OrderController::class, 'DeliveryStatus']);
 });
 
+// Route::middleware(['auth:api', 'role:admin,staff'])->get('/admin/orders', [OrderController::class, 'GetAllOrders']);
 //dashboard 
 Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);       

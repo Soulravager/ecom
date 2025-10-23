@@ -98,7 +98,7 @@ public function index(Request $request)
         $user = $request->user();
         if(!in_array($user->role->slug,['admin','staff'])) return response()->json(['message'=>'Unauthorized'],403);
 
-        $request->validate(['status'=>'required|string|in:pending,completed,cancelled']);
+        $request->validate(['status'=>'required|string|in:pending,completed,cancelled,refunded']);
 
         $order = Order::find($id);
         if(!$order) return response()->json(['message'=>'Order not found'],404);
@@ -146,4 +146,69 @@ public function index(Request $request)
         }
     }
 
+public function DeliveryStatus(Request $request, $id)
+{
+    $user = $request->user();
+
+    if (!in_array($user->role->slug, ['admin', 'staff'])) {
+        return response()->json(['message' => 'Unauthorized'], 403);
+    }
+
+    $request->validate([
+        'delivery_status' => 'required|string|in:pending,shipped,on_the_way,delivered,cancelled_by_seller',
+    ]);
+
+    $order = Order::find($id);
+    if (!$order) {
+        return response()->json(['message' => 'Order not found'], 404);
+    }
+
+    $order->update(['delivery_status' => $request->delivery_status]);
+
+    return response()->json([
+        'message' => 'Delivery status updated successfully',
+        'order' => $order,
+    ]);
 }
+
+
+public function cancelOrder(Request $request, $id)
+{
+    $user = $request->user();
+
+    $order = Order::where('user_id', $user->id)->find($id);
+    if (!$order) {
+        return response()->json(['message' => 'Order not found'], 404);
+    }
+
+    if (in_array($order->delivery_status, ['delivered', 'cancelled_by_seller', 'cancelled_by_user'])) {
+        return response()->json(['message' => 'This order cannot be cancelled'], 400);
+    }
+
+    $order->update(['delivery_status' => 'cancelled_by_user']);
+
+    return response()->json([
+        'message' => 'Order cancelled successfully',
+        'order' => $order,
+    ]);
+}
+
+
+public function GetAllOrders(Request $request)
+{
+    $user = $request->user();
+
+    if (!in_array($user->role->slug, ['admin', 'staff'])) {
+        return response()->json(['message' => 'Unauthorized'], 403);
+    }
+
+    $orders = \App\Models\Order::with(['user:id,name,email', 'items.product:id,name,price'])
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    return response()->json($orders);
+}
+
+
+}
+

@@ -23,7 +23,7 @@ class DashboardController extends Controller
 
     public function lowStock()
     {
-        $lowStockProducts = Product::where('stock', '<', 40)->get();
+        $lowStockProducts = Product::where('stock', '<', 10)->get();
 
         return response()->json([
             'low_stock_products' => $lowStockProducts
