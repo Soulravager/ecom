@@ -10,16 +10,23 @@ use App\Http\Controllers\API\CartController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\API\DashboardController;
 use App\Http\Controllers\API\GeminiController;
+use App\Http\Controllers\API\UserDataController;
+
 
 Route::post('/oauth/token', [AccessTokenController::class, 'issueToken'])
     ->name('passport.token');
-
 
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 
 Route::middleware('auth:api')->post('logout', [AuthController::class, 'logout']);
 Route::middleware('auth:api')->get('/user', [AuthController::class, 'user']);
+//user data routes
+Route::middleware('auth:api')->group(function () {
+    Route::get('/user-data', [UserDataController::class, 'getUserData']);   // Get user data
+    Route::post('/user-data', [UserDataController::class, 'store']);        // Insert new user data
+    Route::patch('/user-data', [UserDataController::class, 'update']);      // Update user data
+});
 
 //public,show products
 Route::get('/products', [ProductController::class, 'index']);
