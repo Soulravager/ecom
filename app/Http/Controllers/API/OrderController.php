@@ -163,6 +163,12 @@ public function DeliveryStatus(Request $request, $id)
         return response()->json(['message' => 'Order not found'], 404);
     }
 
+    if ($order->delivery_status === 'cancelled_by_user') {
+        return response()->json([
+            'message' => 'This order was cancelled by the user and cannot be modified.',
+        ], 400);
+    }
+
     $order->update(['delivery_status' => $request->delivery_status]);
 
     return response()->json([

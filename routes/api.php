@@ -11,7 +11,7 @@ use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\API\DashboardController;
 use App\Http\Controllers\API\GeminiController;
 use App\Http\Controllers\API\UserDataController;
-
+use App\Http\Controllers\Api\ContactController;
 
 Route::post('/oauth/token', [AccessTokenController::class, 'issueToken'])
     ->name('passport.token');
@@ -47,6 +47,7 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::delete('/users/{id}', [UserManagementController::class, 'destroy']);
     Route::patch('/users/{id}/assign-staff', [UserManagementController::class, 'assignStaff']);
     Route::patch('/users/{id}/assign-user', [UserManagementController::class, 'assignUser']);
+    Route::patch('/users/{id}/assign-admin', [UserManagementController::class, 'assignAdmin']);
 
 });
 
@@ -83,4 +84,17 @@ Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
 });
 
 //gemini 
-Route::post('/gemini', [GeminiController::class, 'generate']);
+Route::post('/gemini/chat', [GeminiController::class, 'chat']);
+
+
+//feedback
+
+Route::post('/contacts', [ContactController::class, 'store']);
+
+
+
+//feedback admin/staff view and delete
+Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
+    Route::get('/contacts', [ContactController::class, 'index']);     
+    Route::delete('/contacts/{id}', [ContactController::class, 'destroy']); 
+});

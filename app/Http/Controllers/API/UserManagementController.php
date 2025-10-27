@@ -61,18 +61,58 @@ class UserManagementController extends Controller
         ]);
     }
 
-
-    public function getAllAccounts()
+public function assignAdmin(Request $request, $id)
 {
-    
-    $users = User::with('role')
-        ->whereHas('role', function ($query) {
-            $query->where('slug', '!=', 'admin');
-        })
-        ->select('id', 'name', 'email', 'role_id', 'created_at', 'updated_at')
-        ->get();
+    $currentUser = $request->user();
+
+    if (!$currentUser || $currentUser->role->slug !== 'admin') {
+        return response()->json(['message' => 'Unauthorized'], 403);
+    }
+
+  
+    $user = User::findOrFail($id);
+    $adminRole = Role::where('slug', 'admin')->first();
+
+    if (!$adminRole) {
+        return response()->json(['message' => 'Admin role not found'], 404);
+    }
+
+    if ($user->id === $currentUser->id) {
+        return response()->json(['message' => 'Cant change Current role'], 403);
+    }
+
+    $user->role_id = $adminRole->id;
+    $user->save();
+
+    return response()->json([
+        'message' => 'now admin',
+        'user' => $user->load('role')
+    ]);
+}
+
 
     
+
+
+public function getAllAccounts(Request $request)
+{
+    $currentUser = $request->user();
+
+    $query = User::with('role')
+        ->select('id', 'name', 'email', 'role_id', 'created_at', 'updated_at');
+
+    if ($currentUser) {
+        $query->where('id', '!=', $currentUser->id);
+    }
+
+    if (!$currentUser || $currentUser->role->slug !== 'admin') {
+        $query->whereHas('role', function ($q) {
+            $q->where('slug', '!=', 'admin');
+        });
+    }
+
+    $users = $query->get();
+
     $formattedUsers = $users->map(function ($user) {
         return [
             'id' => $user->id,
@@ -84,7 +124,7 @@ class UserManagementController extends Controller
     });
 
     return response()->json([
-        'message' => 'User and staff accounts retrieved successfully',
+        'message' => 'Accounts retrieved successfully',
         'accounts' => $formattedUsers
     ]);
 }
