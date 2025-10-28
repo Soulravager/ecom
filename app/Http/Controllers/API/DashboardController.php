@@ -23,7 +23,7 @@ class DashboardController extends Controller
 
     public function lowStock()
     {
-        $lowStockProducts = Product::where('stock', '<', 40)->get();
+        $lowStockProducts = Product::where('stock', '<', 10)->get();
 
         return response()->json([
             'low_stock_products' => $lowStockProducts
@@ -36,7 +36,6 @@ public function salesStats(Request $request)
     $request->validate([
         'from_date'   => 'required|date',
         'to_date'     => 'required|date',
-        //'product_id'  => 'nullable|exists:products,id',
     ]);
 
     $query = DB::table('order_items')
@@ -52,9 +51,6 @@ public function salesStats(Request $request)
         ->groupBy('order_items.product_id', 'products.name')
         ->orderByDesc('total_quantity');
 
-    if ($request->product_id) {
-        $query->where('order_items.product_id', $request->product_id);
-    }
 
     $results = $query->first();
 

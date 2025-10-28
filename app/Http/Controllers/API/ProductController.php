@@ -4,67 +4,87 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use Illuminate\Http\Request;
+use App\Http\Requests\ProductRequest;
+use App\Http\Requests\UpdateProductRequest;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
-    
     public function index()
     {
-        return response()->json(Product::all());
+        $products = Product::all();
+        return response()->json($products);
     }
 
-    
-    public function store(Request $request)
+    public function store(ProductRequest $request)
     {
-        $this->validate($request, [
-            'name'        => 'required|string|max:255',
-            'description' => 'required|string',
-            'price'       => 'required|numeric|min:100',            
-            'stock'       => 'required|integer|min:1',
-            'image'       => 'nullable' 
-        ]);
+        $productData = $request->validated();
 
-        $productData = $request->only(['name', 'description', 'price', 'stock']);      
-        
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('products', 'public');
+            $productData['image'] = $path;
+        }
 
         $product = Product::create($productData);
 
         return response()->json($product, 201);
     }
 
-    
     public function show($id)
     {
         $product = Product::findOrFail($id);
         return response()->json($product);
     }
 
-    
-    public function update(Request $request, $id)
+    public function update(UpdateProductRequest $request, $id)
     {
         $product = Product::findOrFail($id);
+        $updateData = $request->validated();
 
-        $this->validate($request, [
-            'name'        => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'price'       => 'sometimes|numeric|min:100',
-            'stock'       => 'sometimes|integer|min:1',
-            'image'       => 'nullable'
-        ]);
-
-        $updateData = $request->only(['name', 'description', 'price', 'stock']);        
-        
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('products', 'public');
+            $updateData['image'] = $path;
+        }
 
         $product->update($updateData);
 
         return response()->json($product);
     }
 
-   
     public function destroy($id)
     {
-        Product::findOrFail($id)->delete();
-        return response()->json(['message' => 'Product deleted']);
+        $product = Product::findOrFail($id);
+        $product->delete();
+
+        return response()->json(['message' => 'Product deleted successfully']);
+    }
+
+    public function hotProduct()
+    {
+        $hotProducts = DB::table('order_items')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->select(
+                'order_items.product_id',
+                'products.name as product_name',
+                'products.image',
+                'products.price',
+                DB::raw('SUM(order_items.quantity) as total_quantity_sold'),
+                DB::raw('COUNT(order_items.id) as total_orders')
+            )
+            ->groupBy('order_items.product_id', 'products.name', 'products.image', 'products.price')
+            ->orderByDesc('total_quantity_sold')
+            ->limit(10)
+            ->get();
+
+        $hotProducts->transform(function ($product) {
+            $product->image = $product->image
+                ? url('storage/' . ltrim($product->image, '/'))
+                : null;
+            return $product;
+        });
+
+        return response()->json([
+            'hot_products' => $hotProducts
+        ]);
     }
 }

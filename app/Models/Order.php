@@ -6,13 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 class Order extends Model
 {
-    use HasFactory;
+    use HasFactory,SoftDeletes;
 
     protected $keyType = 'string';
     public $incrementing = false;
-    protected $fillable = ['user_id','total_amount','status','payment_type','payment_id'];
+    protected $fillable = ['user_id','total_amount','status','payment_type','payment_id', 'delivery_status',];
 
     protected static function booted()
     {
