@@ -75,7 +75,6 @@ Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
     Route::patch('/orders/{id}/delivery-status', [OrderController::class, 'DeliveryStatus']);
 });
 
-// Route::middleware(['auth:api', 'role:admin,staff'])->get('/admin/orders', [OrderController::class, 'GetAllOrders']);
 //dashboard 
 Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);       
@@ -86,12 +85,8 @@ Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
 //gemini 
 Route::post('/gemini/chat', [GeminiController::class, 'chat']);
 
-
 //feedback
-
 Route::post('/contacts', [ContactController::class, 'store']);
-
-
 
 //feedback admin/staff view and delete
 Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
