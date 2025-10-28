@@ -167,7 +167,7 @@ public function DeliveryStatus(Request $request, $id)
         'delivery_status' => 'required|string|in:pending,shipped,on_the_way,delivered,cancelled_by_seller',
     ]);
 
-    $order = Order::find($id);
+    $order = Order::with('items.product')->find($id);
     if (!$order) {
         return response()->json(['message' => 'Order not found'], 404);
     }
@@ -176,6 +176,14 @@ public function DeliveryStatus(Request $request, $id)
         return response()->json([
             'message' => 'This order was cancelled by the user and cannot be modified.',
         ], 400);
+    }
+
+    if ($request->delivery_status === 'cancelled_by_seller') {
+        foreach ($order->items as $item) {
+            if ($item->product) {
+                $item->product->increment('stock', $item->quantity);
+            }
+        }
     }
 
     $order->update(['delivery_status' => $request->delivery_status]);
@@ -191,7 +199,7 @@ public function cancelOrder(Request $request, $id)
 {
     $user = $request->user();
 
-    $order = Order::where('user_id', $user->id)->find($id);
+    $order = Order::where('user_id', $user->id)->with('items.product')->find($id);
     if (!$order) {
         return response()->json(['message' => 'Order not found'], 404);
     }
@@ -200,10 +208,16 @@ public function cancelOrder(Request $request, $id)
         return response()->json(['message' => 'This order cannot be cancelled'], 400);
     }
 
+    foreach ($order->items as $item) {
+        if ($item->product) {
+            $item->product->increment('stock', $item->quantity);
+        }
+    }
+
     $order->update(['delivery_status' => 'cancelled_by_user']);
 
     return response()->json([
-        'message' => 'Order cancelled successfully',
+        'message' => 'Order cancelled successfully and items restocked',
         'order' => $order,
     ]);
 }
