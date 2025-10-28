@@ -35,12 +35,22 @@ public function store(Request $request)
         ]);
 
         foreach ($cartItems as $item) {
+            $product = $item->product;
+
+            if ($product->stock < $item->quantity) {
+                return response()->json([
+                    'message' => "Insufficient stock for {$product->name}",
+                ], 400);
+            }
+
             OrderItem::create([
                 'order_id' => $order->id,
                 'product_id' => $item->product_id,
                 'quantity' => $item->quantity,
-                'price' => $item->product->price,
+                'price' => $product->price,
             ]);
+
+            $product->decrement('stock', $item->quantity);
         }
 
         if ($request->payment_type === 'razorpay') {
@@ -58,15 +68,14 @@ public function store(Request $request)
             $order->update(['payment_id' => $razorpayOrder['id']]);
         }
 
+        CartItem::where('user_id', $user->id)->delete();
+
         return response()->json(['message' => 'Order created', 'order' => $order]);
     } catch (\Exception $e) {
-        \Log::error('Order create failed: ' . $e->getMessage());
-        \Log::info('RAZORPAY_KEY_ID: ' . env('RAZORPAY_KEY_ID'));
-\Log::info('RAZORPAY_KEY_SECRET: ' . env('RAZORPAY_KEY_SECRET'));
-
         return response()->json(['message' => 'Order creation failed', 'error' => $e->getMessage()], 500);
     }
 }
+
 
 
 public function index(Request $request)
