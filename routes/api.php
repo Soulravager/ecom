@@ -93,3 +93,4 @@ Route::middleware(['auth:api', 'role:admin,staff'])->group(function () {
     Route::get('/contacts', [ContactController::class, 'index']);     
     Route::delete('/contacts/{id}', [ContactController::class, 'destroy']); 
 });
+///project ended 28-07-2025
